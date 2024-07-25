@@ -8,11 +8,11 @@ function App() {
   const [file, setFile] = useState(null)
   const [audioStream, setAudioStream] = useState(null)
 
-  const isAudioAvailable = file||audioStream
+  const isAudioAvailable = file || audioStream
 
   function handleAudioReset(){
-    setFile[null]
-    setAudioStream[null]
+    setFile(null)
+    setAudioStream(null)
   }
 
   return (
