@@ -76,15 +76,15 @@ export default function Homepage(props) {
          gap-4 mx-auto w-72 max-w-full my-4 specialBtn px-4 py-2 rounded-xl'>
             <p className='font-semibold text-blue-400'>{recordingStatus===
             'inactive'?'Record':'Stop Recording'}</p>
-            <div className='flex item-center gap-2'>
+            <div className=' flex item-center gap-2 '>
                 {duration!=0&&(
-                    <p className='text-sm'>{duration}s</p>
+                    <p className=' text-sm'>{duration}s</p>
                 )
                     
                 }
             </div>
             <i className={"fa-solid duration-200 fa-microphone pt-1" + 
-                (recordingStatus==='recording'?'text-orange-300 pt-1':"")}></i>
+                (recordingStatus==='recording'?' text-rose-300 pt-1':"")}></i>
         </button>
         <p>Or <label className='font-semibold text-blue curson-pointer hover:text-blue-400 duration-200'>upload 
             <input onChange={(e)=>{

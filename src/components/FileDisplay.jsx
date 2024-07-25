@@ -1,7 +1,7 @@
 import React from 'react'
 
 export default function FileDisplay(props) {
-    const {handleAudioReset,file,audioStream} = props
+    const {handleAudioReset,file,audioStream,handleFormSubmission} = props
   return (
     <main className='flex-1 p-4 flex flex-col gap-3 sm:gap-4 
     md:gap-5 justify-center text-center pb-20 w-fit max-w-full mx-auto sm:w-96'>
@@ -14,7 +14,7 @@ export default function FileDisplay(props) {
             <div className='flex items-center justify-between gap-4'>
               <button onClick={handleAudioReset} className='text-slate-400 hover:text-blue-600 duration-300'>
                 Reset</button>
-              <button className='specialBtn p-2 rounded-lg text-blue-400 flex items-center gap-2 font-medium'>
+              <button onClick={handleFormSubmission} className='specialBtn p-2 rounded-lg text-blue-400 flex items-center gap-2 font-medium'>
                 <i className="fa-solid fa-pen-fancy"></i>
                 <p>Transcribe</p>
    

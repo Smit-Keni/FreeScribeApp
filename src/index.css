@@ -20,16 +20,16 @@ h1,h2,h3, .bold {
   opacity:0.8;
 }
 
-.loading{
+.loading {
   animation: anim 5s linear infinite;
   margin-right: auto;
 }
 
-.loading1{
+.loading1 {
   animation-delay: -4s;
 }
 
-.loading2{
+.loading2 {
   animation-delay: -2s;
 }
 
