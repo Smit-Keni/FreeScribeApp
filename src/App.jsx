@@ -45,8 +45,8 @@ function App() {
           break;
 
         case 'RESULT':
-          setOutput(e.data.result)
-          
+          setOutput(e.data.results)
+          console.log(e.data.results)
           break;
 
         case 'INFERENCE_DONE':
@@ -64,11 +64,11 @@ function App() {
 
   })
 
-  async function readAudioFrom(file){
-    const sampling_rate=16000
-    const audioCTX = new AudioContext({sampleRate:sampling_rate})
+  async function readAudioFrom(file) {
+    const sampling_rate = 16000
+    const audioCTX = new AudioContext({ sampleRate: sampling_rate })
     const response = await file.arrayBuffer()
-    const decoded =await audioCTX.decodeAudioData(response)
+    const decoded = await audioCTX.decodeAudioData(response)
     const audio = decoded.getChannelData(0)
     return audio
   }

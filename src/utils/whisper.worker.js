@@ -2,7 +2,7 @@ import {pipeline} from '@xenova/transformers'
 import { MessageTypes } from './Presets'
 
 class MyTranscriptionPipeline{
-    static tast= 'automatic-speech-recognition'
+    static task= 'automatic-speech-recognition'
     static model = 'openai/whisper-tiny.en'
     static instance =null
 
@@ -11,7 +11,11 @@ class MyTranscriptionPipeline{
             this.instance=await pipeline(this.task,null,{
                 progress_callback
             })
+
+
         }
+
+        return this.instance
     }
 }
 
@@ -23,7 +27,7 @@ self.addEventListener('message',async (event)=>{
 })
 
 async function transcribe(audio){
-    sendLoadingMesage('Loading')
+    sendLoadingMessage('Loading')
 
     let pipeline
 
@@ -39,9 +43,7 @@ async function transcribe(audio){
 
     const stride_length_s = 5
 
-    const generationTracker = new GenerationTracker(pipeline,
-        stride_length_s
-    )
+    const generationTracker = new GenerationTracker(pipeline,stride_length_s)
     await pipeline(audio,{
         top_k:0,
         do_sample:false,
@@ -50,7 +52,7 @@ async function transcribe(audio){
         return_timestamps:true,
         callback_function: generationTracker.callbackFunction.bind
         (generationTracker),
-        chunk_callback: generationTracker.chunk_Callback.bind
+        chunk_callback: generationTracker.chunkCallback.bind
         (generationTracker)
     })
 
@@ -66,7 +68,7 @@ async function load_model_callback(data){
 }
 
 function sendLoadingMessage(status){
-    sendLoadingMessage.postMessage({
+    self.postMessage({
         type:MessageTypes.LOADING,
         status
     })
@@ -87,75 +89,86 @@ class GenerationTracker{
         this.pipeline=pipeline
         this.stride_length_s=stride_length_s
         this.chunks=[]
-        this.time_precision=pipeline?.processor.feature_extractor.config.chunk_length/pipeline.model.config.max_source_positions
+        this.time_precision=pipeline?.processor.feature_extractor.config.chunk_length / pipeline.model.config.max_source_positions
         this.processed_chunks=[]
         this.callbackFunctionCounter=0
     }
 
     sendFinalResult(){
-        sendLoadingMessage.postMessage({type:MessageTypes.INFERENCE_DONE})
+        self.postMessage({type:MessageTypes.INFERENCE_DONE})
     }
     callbackFunction(beams){
         this.callbackFunctionCounter+=1
-        if(this.callbackFunctionCounter%10!=0){return}
+        if(this.callbackFunctionCounter%10!==0){return}
 
         const bestBeam =  beams[0]
-        let text = this.pipleline.tokenizer.decode(bestBeam.output_token_ids,{
+        let text = this.pipeline.tokenizer.decode(bestBeam.output_token_ids,{
             skip_special_tokens : true
     })
 
     const result = {
         text,
-        start: this.getLastChunkTimpeStamp(),
-        end:underfined
+        start: this.getLastChunkTimeStamp(),
+        end:undefined
     }
 
     createPartialResultMessage(result)
     }
 
-    chunkCallback(data){
-        this.chunkCallback.push(data)
-        const [text,{chunks}] = this.pipeline.tokenizer._decode_asr(
-            this.chunks,
-        {
-            time_precision: this.time_precision,
-            return_timestamps: true,
-            force_full_sequence: false
-        }
-    )
-    this.processed_chunks = chunks.map((chunk,index)=>{
-        return this.processed_chunks(chunk,index)
-    })
-
-    createResultMessage(
-        this.processed_chunks,false,this,getLastChunkTimeStamp()
-    )
 
     
+    
+
+    chunkCallback(data){
+            this.chunks.push(data)
+            const [text,{chunks}] = this.pipeline.tokenizer._decode_asr(
+                this.chunks,
+            {
+                time_precision: this.time_precision,
+                return_timestamps: true,
+                force_full_sequence: false
+            }
+        )
+        this.processed_chunks = chunks.map((chunk,index)=>{
+            return this.processChunk(chunk,index)
+        })
+
+        createResultMessage(
+            this.processed_chunks,false,this.getLastChunkTimeStamp()
+        )
+        
+
 
     }
+
     getLastChunkTimeStamp(){
         if(this.processed_chunks.length===0){
             return 0
         }
+    
     }
 
+
+    
     processChunk(chunk,index){
         const {text,timestamp} = chunk
-        const {start,end} = timestamp
+        const [start,end] = timestamp
 
         return {
             index,
             text:`${text.trim()}`,
-            start: Math.round(end) || Math.round(start + 0.9 * this.stride_length_s)
+            start: Math.round(start),
+            end: Math.round(end) || Math.round(start + 0.9 * this.stride_length_s)
         }
-    }
 
-    
+    }
 }
 
+    
+
+
 function createResultMessage(results,isDone,time,completedUntilTimestamp){
-    sendLoadingMessage.postMessage({
+    self.postMessage({
         type: MessageTypes.RESULT,
         results,
         isDone,
@@ -164,7 +177,7 @@ function createResultMessage(results,isDone,time,completedUntilTimestamp){
 }
 
 function createPartialResultMessage(result){
-    sendLoadingMessage.postMessage({
+    self.postMessage({
         type:MessageTypes.RESULT_PARTIAL,
         result
     })

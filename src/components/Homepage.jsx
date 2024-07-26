@@ -39,6 +39,7 @@ export default function Homepage(props) {
             if(event.data.size===0){return}
             localAudioChunks.push(event.data)
         }
+        setAudioChunks(localAudioChunks)
      }
 
      async function stopRecording(){
