@@ -51,15 +51,19 @@ export default function Information(props) {
     
   })
 
+  const textElement = tab === 'transcription'? 
+  (output.map(val=>val.text)):translation||'No translation'
+
+
   function handleCopy(){
-    navigator.clipboard.writeText()
+    navigator.clipboard.writeText(textElement)
   }
 
   function handleDownload(){
     const element = document.createElement('a')
-    const file = new Blob([],{type:'text/plain'})
+    const file = new Blob([textElement],{type:'text/plain'})
     element.href = URL.createObjectURL(file)
-    element.download(`Freescribe_${(new Date()).toString()}.txt`)
+    element.download=`Freescribe_${(new Date()).toString()}.txt`
     document.body.appendChild(element)
     element.click()
   }
@@ -73,13 +77,12 @@ export default function Information(props) {
 
       worker.current.postMessage({
         text: output.map(val=>val.text),
-        src_language:'eng_Latn',
+        src_lang:'eng_Latn',
         tgt_lang:language
       })
   }
 
-  const textElement = tab === 'transcription'? (output.map(val=>val.text)):''
-
+  
   return (
     
       <main className='flex-1 p-4 flex flex-col gap-3 sm:gap-4 
@@ -107,11 +110,11 @@ export default function Information(props) {
         setLanguage={setLanguage} generateTranslation={generateTranslation}/>)}
         </div>
         <div className='flex items-center gap-4 mx-auto '>
-          <button title='copy'className=' specialBtn text-slate-600 p-2 rounded px-4'>
+          <button onClick={handleCopy} title='copy'className=' specialBtn text-slate-600 p-2 rounded px-4'>
           <i className="fa-solid fa-copy"></i>
           
           </button>
-          <button title='download'className=' specialBtn text-slate-600 p-2 rounded px-4'>
+          <button onClick={handleDownload} title='download'className=' specialBtn text-slate-600 p-2 rounded px-4'>
           <i className="fa-solid fa-download"></i>
           
           </button>
