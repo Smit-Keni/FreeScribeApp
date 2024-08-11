@@ -90,7 +90,7 @@ function App() {
     <div className='flex flex-col max-w-[1000px] mx-auto w-full'>
       <section className='min-h-screen flex flex-col'>
         <Header/>
-        {output?(<Information/>):
+        {output?(<Information output={output}/>):
         loading?(<Transcribing/>):
           isAudioAvailable?(<FileDisplay handleFormSubmission={handleFormSubmission} file={file} audioStream={setAudioStream} handleAudioReset={handleAudioReset}/>):
           (<Homepage setFile={setFile} setAudioStream={setAudioStream}/>)}

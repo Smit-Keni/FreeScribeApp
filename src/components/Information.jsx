@@ -1,10 +1,84 @@
-import React , {useState}from 'react'
+import React , {useState,useEffect,useRef}from 'react'
 import Transcription from './Transcription'
 import Translation from './Translation'
 
-export default function Information() {
+export default function Information(props) {
 
+  const {output} = props
   const [tab,setTab] = useState('transcription')
+  const [translation,setTranslation] = useState(null)
+  const [language,setLanguage] = useState('Select Language')
+  const [translating,setTranslating] = useState(null)
+
+  const worker=useRef()
+
+  useEffect(()=>{
+    if(!worker.current){
+      worker.current =  new Worker(
+        new URL('../utils/translate.worker.js',import.meta.url),{
+          type:'module'
+        })
+
+      }
+
+        const onMessageRecieved = async (e)=>{
+          switch(e.data.status){
+            case 'initiate':
+              console.log('DOWNLOADING')
+              break;
+    
+            case 'progress':
+              console.log('LOADING')
+              break;
+    
+            case 'update':
+              setTranslation(e.data.results)
+              console.log(e.data.results)
+              break;
+    
+            case 'complete':
+              setTranslating(false)
+              console.log('DONE')
+              break;
+          }
+        }
+    
+        worker.current.addEventListener('message',
+          onMessageRecieved
+        )
+    
+        return()=>worker.current.removeEventListener('message',onMessageRecieved)  
+    
+  })
+
+  function handleCopy(){
+    navigator.clipboard.writeText()
+  }
+
+  function handleDownload(){
+    const element = document.createElement('a')
+    const file = new Blob([],{type:'text/plain'})
+    element.href = URL.createObjectURL(file)
+    element.download(`Freescribe_${(new Date()).toString()}.txt`)
+    document.body.appendChild(element)
+    element.click()
+  }
+
+  function generateTranslation(){
+      if(translating || language ==="Select Language"){
+        return
+      }
+
+      setTranslating(true)
+
+      worker.current.postMessage({
+        text: output.map(val=>val.text),
+        src_language:'eng_Latn',
+        tgt_lang:language
+      })
+  }
+
+  const textElement = tab === 'transcription'? (output.map(val=>val.text)):''
 
   return (
     
@@ -24,10 +98,24 @@ export default function Information() {
             'text-blue-400 hover:text-blue-300'
           )}>Translation</button>
         </div>
+        <div className='my-8 flex flex-col'>
         {tab==='transcription'?(
-          <Transcription/>
+          <Transcription {...props} textElement={textElement}/>
         ):
-        (<Translation/>)}
+        (<Translation {...props} language={language} translating={translating} 
+          textElement={textElement} setTranslation={setTranslation} setTranslating={setTranslating} 
+        setLanguage={setLanguage} generateTranslation={generateTranslation}/>)}
+        </div>
+        <div className='flex items-center gap-4 mx-auto '>
+          <button title='copy'className=' specialBtn text-slate-600 p-2 rounded px-4'>
+          <i className="fa-solid fa-copy"></i>
+          
+          </button>
+          <button title='download'className=' specialBtn text-slate-600 p-2 rounded px-4'>
+          <i className="fa-solid fa-download"></i>
+          
+          </button>
+        </div>
       </main>
   )
 }
